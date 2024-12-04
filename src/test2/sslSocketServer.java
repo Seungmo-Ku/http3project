@@ -56,7 +56,8 @@ public class sslSocketServer {
             while((headerFirstLine = in.readLine()) != null) {
                 System.out.println(headerFirstLine);
                 if(getInt(headerFirstLine.charAt(1)) != 1) {
-                    System.out.println("Wrong header");
+                    System.err.println("FRAME_ENCODING_ERROR (0x0007)");
+                    System.exit(1);
                 }
                 headerForm = getInt(headerFirstLine.charAt(0));
                 if (headerForm == 1) { //long header는 prior to the connection establishment
@@ -79,7 +80,8 @@ public class sslSocketServer {
                     System.out.println("DestinationID: " + destinationID);
                     System.out.println("SourceID: " + sourceID);
                     if(sourceID != 65535 && sourceID > assignedSourceID) {
-                        throw new IOException();
+                        System.err.println("STREAM_STATE_ERROR (0x0005)");
+                        System.exit(1);
                     }
                     if (sourceID == 65535) { //assign sourceID
                         out.println(createQuicShortHeader(++assignedSourceID, "00000REJ"));
@@ -178,7 +180,7 @@ public class sslSocketServer {
                     out.println(outString);
 
                 }
-
+                System.err.println("NO_ERROR (0x0000)");
             }
 
         } catch (IOException e) {

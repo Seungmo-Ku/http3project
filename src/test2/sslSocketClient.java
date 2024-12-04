@@ -3,6 +3,7 @@ package test2;
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.KeyStore;
+import java.sql.SQLOutput;
 import java.util.Scanner;
 
 public class sslSocketClient {
@@ -69,7 +70,6 @@ public class sslSocketClient {
      */
 
     public static void main(String[] args) throws Exception {
-        System.out.println(createFrameHeader(true, "aaa"));
         // 키 저장소 설정 (선택적)
         KeyStore ks = KeyStore.getInstance("JKS");
         ks.load(new FileInputStream("mykeystore.jks"), "changeit".toCharArray());
@@ -84,7 +84,13 @@ public class sslSocketClient {
 
         // SSLSocketFactory 생성
         SSLSocketFactory sf = sslContext.getSocketFactory();
-        SSLSocket socket = (SSLSocket) sf.createSocket("localhost", 7777);
+        SSLSocket socket = null;
+        try {
+            socket = (SSLSocket) sf.createSocket("localhost", 7777);
+        }catch(IOException e) {
+            System.err.println("CONNECTION REFUSED (0x0002)");
+            System.exit(1);
+        }
 
         // 데이터 전송
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -104,7 +110,7 @@ public class sslSocketClient {
         System.out.println(headerFirstLine);
 
         if(getInt(headerFirstLine.charAt(1)) != 1) {
-            System.out.println("Wrong header");
+            System.err.println("FRAME_ENCODING_ERROR (0x0007)");
         }
 
         sourceID = Integer.parseInt(headerFirstLine.substring(8, 16), 16);
@@ -134,7 +140,7 @@ public class sslSocketClient {
 
             if(j == 0) break;
             else {
-                System.out.print("Stream의 수\n응답 : ");
+                System.out.print("Stream의 수 응답 : ");
 
                 int numOfStream = scanner.nextInt();
                 out.println(createQuicShortHeader(numOfStream + ""));
@@ -177,7 +183,10 @@ public class sslSocketClient {
                     System.out.println(entityBody);
                     i --;
                 }
+                System.err.println("NO_ERROR (0x0000)");
                 in.readLine();
+
+                //System.out.println("응답 : ");
 
 
             }
